@@ -48,6 +48,15 @@
   function hideError() {
     errorBox.hidden = true;
   }
+  // 网络层错误（后端未启动 / 连不上）统一转为中文提示。
+  // 否则用户只会看到浏览器原始的 "Failed to fetch"，既不友好也不便于排查。
+  function friendlyError(err) {
+    var msg = (err && err.message) ? err.message : "";
+    if (/Failed to fetch|NetworkError|Load failed|Network request failed/i.test(msg)) {
+      return "无法连接后端服务，请确认后端已启动";
+    }
+    return msg || "未知错误";
+  }
   // 数字格式化：消除二进制浮点误差带来的显示噪声。
   // 例如 1.1 + 2.2 在 double 下会得到 3.3000000000000003，这里显示为 3.3。
   // 只影响展示，不改变后端返回与数据库存储的原始值。
@@ -153,7 +162,7 @@
         .then(renderHistory)
         .catch(function (err) {
           loadEl.hidden = true;
-          showToast("加载历史失败：" + err.message);
+          showToast("加载历史失败：" + friendlyError(err));
         });
   }
   function removeRecord(id) {
@@ -167,7 +176,7 @@
           loadHistory();
         })
         .catch(function (err) {
-          showToast("删除失败：" + err.message);
+          showToast("删除失败：" + friendlyError(err));
         });
   }
   // ---------------- 计算 ----------------
@@ -207,7 +216,7 @@
           }
         })
         .catch(function (err) {
-          showError(err.message || "计算失败，请检查表达式");
+          showError(friendlyError(err));
         })
         .finally(function () {
           calcBtn.disabled = false;
@@ -243,7 +252,7 @@
           loadHistory();
         })
         .catch(function (err) {
-          showToast("清空失败：" + err.message);
+          showToast("清空失败：" + friendlyError(err));
         });
   });
   prevBtn.addEventListener("click", function () {
