@@ -72,14 +72,30 @@ public class CalculationService {
     }
 
     /**
-     * 分页查询历史记录，按计算时间倒序。
+     * 分页查询历史记录，按计算时间倒序（不筛选）。
      */
     @Transactional(readOnly = true)
     public PageResponse<CalculationResponse> getHistory(int page, int size) {
+        return getHistory(page, size, null);
+    }
+
+    /**
+     * 分页查询历史记录，按计算时间倒序；支持按表达式关键字模糊搜索。
+     *
+     * @param page    页码，从 0 开始，负数按 0 处理
+     * @param size    每页条数，限制在 1~100
+     * @param keyword 表达式关键字；为 null 或空白时不筛选
+     * @return 分页结果
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<CalculationResponse> getHistory(int page, int size, String keyword) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.max(Math.min(size, 100), 1);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "calculatedAt", "id"));
-        Page<Calculation> result = repository.findAllByOrderByCalculatedAtDesc(pageable);
+        String kw = keyword == null ? "" : keyword.trim();
+        Page<Calculation> result = kw.isEmpty()
+                ? repository.findAllByOrderByCalculatedAtDesc(pageable)
+                : repository.findByExpressionContainingOrderByCalculatedAtDesc(kw, pageable);
         Page<CalculationResponse> dtoPage = result.map(CalculationResponse::from);
         return PageResponse.from(dtoPage);
     }

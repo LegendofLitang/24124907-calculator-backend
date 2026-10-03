@@ -11,18 +11,26 @@ import java.util.List;
  * <p>实现方式：
  * <ol>
  *   <li>词法分析：把输入拆分为 数字 / 运算符 / 括号 token，并剔除空格；</li>
- *   <li>递归下降解析：expr → term (+|-) term；term → factor (*|/|%) factor；factor → ( expr ) | - factor | number；</li>
+ *   <li>递归下降解析，文法如下（自上而下优先级递增）：
+ *     <pre>
+ *       expr    := term (('+' | '-') term)*
+ *       term    := unary (('*' | '/' | '%') unary)*
+ *       unary   := ('+' | '-') unary | power
+ *       power   := primary ('^' unary)?        // 幂运算右结合，指数可带一元符号
+ *       primary := '(' expr ')' | number
+ *     </pre>
+ *     由此得到的优先级为：括号 &gt; 幂 &gt; 一元正负号 &gt; 乘除模 &gt; 加减；</li>
  *   <li>求值使用 double，并对除零、溢出、非有限结果进行显式检查。</li>
  * </ol>
  *
  * <p>安全性：纯 Java 手写解析，不执行任何动态代码，杜绝注入；只接受白名单字符
- * （数字、+ - * / % ( ) . 空格），其余一律报错。
+ * （数字、+ - * / % ^ ( ) . 空格），其余一律报错。
  */
 public final class ExpressionEvaluator {
 
-    /** 单个 token。type 取值：NUMBER, PLUS, MINUS, STAR, SLASH, PERCENT, LPAREN, RPAREN, END。 */
+    /** 单个 token。type 取值：NUMBER, PLUS, MINUS, STAR, SLASH, PERCENT, POWER, LPAREN, RPAREN, END。 */
     private static final class Token {
-        enum Type { NUMBER, PLUS, MINUS, STAR, SLASH, PERCENT, LPAREN, RPAREN, END }
+        enum Type { NUMBER, PLUS, MINUS, STAR, SLASH, PERCENT, POWER, LPAREN, RPAREN, END }
         final Type type;
         final String text;
 
@@ -123,6 +131,7 @@ public final class ExpressionEvaluator {
                 case '*': tokens.add(new Token(Token.Type.STAR, "*")); i++; break;
                 case '/': tokens.add(new Token(Token.Type.SLASH, "/")); i++; break;
                 case '%': tokens.add(new Token(Token.Type.PERCENT, "%")); i++; break;
+                case '^': tokens.add(new Token(Token.Type.POWER, "^")); i++; break;
                 case '(': tokens.add(new Token(Token.Type.LPAREN, "(")); i++; break;
                 case ')': tokens.add(new Token(Token.Type.RPAREN, ")")); i++; break;
                 default:
@@ -181,20 +190,20 @@ public final class ExpressionEvaluator {
             }
         }
 
-        /** term := factor ((*|/|%) factor)* */
+        /** term := unary ((*|/|%) unary)* */
         double parseTerm() {
-            double left = parseFactor();
+            double left = parseUnary();
             while (true) {
                 if (match(Token.Type.STAR)) {
-                    left = left * parseFactor();
+                    left = left * parseUnary();
                 } else if (match(Token.Type.SLASH)) {
-                    double divisor = parseFactor();
+                    double divisor = parseUnary();
                     if (divisor == 0.0) {
                         throw new ExpressionException("除数不能为零");
                     }
                     left = left / divisor;
                 } else if (match(Token.Type.PERCENT)) {
-                    double divisor = parseFactor();
+                    double divisor = parseUnary();
                     if (divisor == 0.0) {
                         throw new ExpressionException("除数不能为零");
                     }
@@ -205,20 +214,45 @@ public final class ExpressionEvaluator {
             }
         }
 
-        /** factor := ( expr ) | - factor | + factor | number */
-        double parseFactor() {
+        /** unary := (+|-) unary | power */
+        double parseUnary() {
+            if (match(Token.Type.MINUS)) {
+                // 一元负号
+                return -parseUnary();
+            }
+            if (match(Token.Type.PLUS)) {
+                // 一元正号
+                return parseUnary();
+            }
+            return parsePower();
+        }
+
+        /**
+         * power := primary ('^' unary)?
+         *
+         * <p>幂运算优先级高于一元正负号，所以 -2^2 = -(2^2) = -4；
+         * 同时它是右结合的，所以 2^3^2 = 2^(3^2) = 512。
+         * 指数位置调用 unary 而非 power，使 2^-1 这类写法合法。
+         */
+        double parsePower() {
+            double base = parsePrimary();
+            if (match(Token.Type.POWER)) {
+                double exponent = parseUnary();
+                double result = Math.pow(base, exponent);
+                if (Double.isNaN(result) || Double.isInfinite(result)) {
+                    throw new ExpressionException("幂运算结果溢出或无法计算");
+                }
+                return result;
+            }
+            return base;
+        }
+
+        /** primary := ( expr ) | number */
+        double parsePrimary() {
             if (match(Token.Type.LPAREN)) {
                 double value = parseExpression();
                 expect(Token.Type.RPAREN, "括号不匹配：缺少右括号 )");
                 return value;
-            }
-            if (match(Token.Type.MINUS)) {
-                // 一元负号
-                return -parseFactor();
-            }
-            if (match(Token.Type.PLUS)) {
-                // 一元正号
-                return parseFactor();
             }
             if (current().type == Token.Type.NUMBER) {
                 String text = consume().text;
@@ -228,13 +262,16 @@ public final class ExpressionEvaluator {
                     throw new ExpressionException("数字格式错误：" + text);
                 }
             }
-            // 数字后紧接左括号 "2(3)" 或连续运算符 "2 + * 3" 或 "2++3" 等
+            // 数字后紧接左括号 "2(3)" 或连续运算符 "2 + * 3" 等
             Token.Type t = current().type;
             if (t == Token.Type.RPAREN) {
                 throw new ExpressionException("括号不匹配：多余的右括号 )");
             }
             if (t == Token.Type.END) {
                 throw new ExpressionException("表达式不完整：缺少操作数");
+            }
+            if (t == Token.Type.POWER) {
+                throw new ExpressionException("表达式格式非法：^ 前缺少底数");
             }
             throw new ExpressionException("表达式格式非法：不允许连续运算符");
         }

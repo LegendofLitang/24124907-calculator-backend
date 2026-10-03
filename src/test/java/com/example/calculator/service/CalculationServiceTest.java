@@ -84,6 +84,29 @@ class CalculationServiceTest {
     }
 
     @Test
+    @DisplayName("按表达式关键字搜索历史记录（扩展功能）")
+    void searchHistoryByKeyword() {
+        service.calculate("1 + 1");
+        service.calculate("2 + 2");
+        service.calculate("10 + 1");
+
+        // 命中两条：表达式含 "+ 1"
+        PageResponse<CalculationResponse> hit = service.getHistory(0, 10, "+ 1");
+        assertEquals(2, hit.getTotalElements());
+        for (CalculationResponse c : hit.getContent()) {
+            assertTrue(c.getExpression().contains("+ 1"));
+        }
+
+        // 无命中
+        assertEquals(0, service.getHistory(0, 10, "999").getTotalElements());
+
+        // 空关键字 / null 等同于不筛选
+        assertEquals(3, service.getHistory(0, 10, "   ").getTotalElements());
+        assertEquals(3, service.getHistory(0, 10, null).getTotalElements());
+        assertEquals(3, service.getHistory(0, 10).getTotalElements());
+    }
+
+    @Test
     @DisplayName("分页参数边界处理")
     void pageBounds() {
         for (int i = 1; i <= 5; i++) {

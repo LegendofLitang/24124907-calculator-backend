@@ -257,3 +257,26 @@ input:focus {
 .key-btn.op:hover {
   background: #ddd6fe;
 }
+
+/* ======== 扩展功能：幂运算键（横跨整行） ======== */
+.key-btn.wide {
+  grid-column: span 4;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+
+/* ======== 扩展功能：历史记录搜索框 ======== */
+.history-search {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.history-search input {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+/* 搜索命中时的高亮标记 */
+.history-search .btn.mini {
+  flex: none;
+}

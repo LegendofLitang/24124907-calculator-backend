@@ -46,14 +46,19 @@ public class CalculationController {
     }
 
     /**
-     * 分页查询历史记录（按计算时间倒序）。
-     * 例：GET /api/calculations?page=0&size=10
+     * 分页查询历史记录（按计算时间倒序），支持按表达式关键字搜索。
+     *
+     * <pre>
+     * GET /api/calculations?page=0&amp;size=10              全部
+     * GET /api/calculations?page=0&amp;size=10&amp;keyword=1+2  只返回表达式含 "1+2" 的记录
+     * </pre>
      */
     @GetMapping
     public PageResponse<CalculationResponse> history(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return service.getHistory(page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword) {
+        return service.getHistory(page, size, keyword);
     }
 
     /**

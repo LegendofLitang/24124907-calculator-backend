@@ -1,14 +1,13 @@
 /**
  * config.js — 部署配置（前端唯一的配置项）
  *
- * 部署到公网时，把下面的值改成**后端的公网地址**，例如：
- *     window.API_BASE = "https://calculator-api.example.com";
- * 或带端口的：
- *     window.API_BASE = "http://1.2.3.4:8080";
+ * 【保持 ""】默认值，适用于**前后端同源**的场景：
+ *   - 由后端一并提供页面（如本项目部署在 http://111.230.148.219）→ 自动走相对路径 /api/...
+ *   - 用 file:// 直接双击打开 html 文件 → 自动回退到 http://localhost:8080
  *
- * 留空字符串 "" 时，由 app.js 自动判断后端地址：
- *   - 页面由后端 8080 端口提供（同源）→ 走相对路径 /api/...
- *   - 其他情况（Live Server / http.server / 直接打开）→ 回退到 http://localhost:8080
+ * 【填写地址】适用于**前后端分离部署**，或本地用 Live Server 调试：
+ *     window.API_BASE = "http://111.230.148.219";    // 指向后端公网地址
+ *     window.API_BASE = "http://localhost:8080";     // 指向本地后端
  *
  * 注意：本文件必须在 app.js **之前**加载（见 index.html 底部的 script 顺序）。
  */

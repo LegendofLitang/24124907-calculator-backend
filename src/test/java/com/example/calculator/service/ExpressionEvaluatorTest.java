@@ -73,6 +73,40 @@ class ExpressionEvaluatorTest {
         assertEquals(0.0, ExpressionEvaluator.evaluate("6 % 2"), 1e-9);
     }
 
+    // ---------- 幂运算（扩展功能） ----------
+    @Test
+    @DisplayName("幂运算：基本、右结合、优先级与一元符号")
+    void power() {
+        assertEquals(8.0, ExpressionEvaluator.evaluate("2^3"), 1e-9);
+        assertEquals(1.0, ExpressionEvaluator.evaluate("5^0"), 1e-9);
+        assertEquals(0.5, ExpressionEvaluator.evaluate("2^-1"), 1e-9);
+        assertEquals(2.0, ExpressionEvaluator.evaluate("4^0.5"), 1e-9);
+        // 右结合：2^(3^2) = 2^9 = 512
+        assertEquals(512.0, ExpressionEvaluator.evaluate("2^3^2"), 1e-9);
+        // 幂优先级高于一元负号：-(2^2) = -4
+        assertEquals(-4.0, ExpressionEvaluator.evaluate("-2^2"), 1e-9);
+        // 幂优先级高于乘除：2 * 3^2 = 2 * 9 = 18
+        assertEquals(18.0, ExpressionEvaluator.evaluate("2 * 3^2"), 1e-9);
+        // 括号改变结合顺序
+        assertEquals(64.0, ExpressionEvaluator.evaluate("(2^3)^2"), 1e-9);
+        assertEquals(512.0, ExpressionEvaluator.evaluate("2^(3^2)"), 1e-9);
+    }
+
+    @Test
+    @DisplayName("幂运算异常：缺少底数/指数、非法开方、溢出")
+    void powerErrors() {
+        // ^ 前缺少底数
+        assertThrows(ExpressionException.class, () -> ExpressionEvaluator.evaluate("^2"));
+        // ^ 后缺少指数
+        assertThrows(ExpressionException.class, () -> ExpressionEvaluator.evaluate("2^"));
+        // 负数开偶次方，double 下为 NaN
+        assertThrows(ExpressionException.class, () -> ExpressionEvaluator.evaluate("(-8)^0.5"));
+        // 0 的负数次幂为 Infinity
+        assertThrows(ExpressionException.class, () -> ExpressionEvaluator.evaluate("0^-1"));
+        // 结果溢出
+        assertThrows(ExpressionException.class, () -> ExpressionEvaluator.evaluate("9^9^9"));
+    }
+
     // ---------- 除零 ----------
     @Test
     @DisplayName("除零抛出异常")

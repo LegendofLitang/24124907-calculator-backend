@@ -24,7 +24,7 @@
                      placeholder="如 (10 + 5) / 3" autocomplete="off" required />
               <button type="button" id="clearInput" class="btn ghost" title="清空输入">清空</button>
             </div>
-            <p class="hint">支持 + − × ÷ 写作 + - * /，以及 % ( ) 和小数、负数</p>
+            <p class="hint">支持 + − × ÷ xʸ 写作 + - * / ^，以及 % ( ) 和小数、负数</p>
           </div>
           <!-- 虚拟按键网格【新增】 -->
           <div class="calc-keypad" role="group" aria-label="虚拟按键">
@@ -52,6 +52,8 @@
             <button type="button" class="key-btn" data-key="." aria-label="小数点">.</button>
             <button type="button" class="key-btn op" data-key="%" aria-label="取模">%</button>
             <button type="button" class="key-btn op" data-key="+" aria-label="加">+</button>
+            <!-- 扩展功能：幂运算 -->
+            <button type="button" class="key-btn op wide" data-key="^" aria-label="幂运算">xʸ 幂运算</button>
           </div>
           <button type="submit" class="btn primary" id="calcBtn">
             <span id="calcBtnText">计算</span>
@@ -72,6 +74,12 @@
           <h2>历史记录</h2>
           <button id="prevPage" class="btn mini" type="button" disabled>‹ 上一页</button>
           <button id="clearHistory" class="btn ghost small" type="button">清空全部</button>
+        </div>
+        <!-- 扩展功能：历史记录搜索 -->
+        <div class="history-search">
+          <input id="historySearch" type="search" placeholder="搜索表达式关键字…"
+                 autocomplete="off" aria-label="搜索历史记录" />
+          <button id="historySearchReset" class="btn mini" type="button">重置</button>
         </div>
         <p class="history-meta" id="historyMeta"></p>
         <ul id="historyList" class="history-list" aria-live="polite"></ul>

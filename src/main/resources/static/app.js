@@ -79,8 +79,12 @@
     listEl.innerHTML = "";
     var items = pageData.content || [];
     emptyEl.hidden = items.length > 0;
+    emptyEl.textContent = historyKeyword
+        ? "没有匹配「" + historyKeyword + "」的记录"
+        : "还没有计算记录";
     loadEl.hidden = true;
-    metaEl.textContent = "共 " + pageData.totalElements + " 条 · 第 " +
+    metaEl.textContent = (historyKeyword ? "搜索「" + historyKeyword + "」· " : "") +
+        "共 " + pageData.totalElements + " 条 · 第 " +
         (pageData.page + 1) + "/" + Math.max(pageData.totalPages, 1) + " 页";
     items.forEach(function (item) {
       var li = document.createElement("li");
@@ -128,9 +132,16 @@
     currentPage = pageData.page;
     totalPages = pageData.totalPages;
   }
+  // 扩展功能：历史记录搜索关键字（空串表示不筛选）
+  var historyKeyword = "";
+
   function loadHistory() {
     loadEl.hidden = false;
-    fetch(API_BASE + "/api/calculations?page=" + currentPage + "&size=" + pageSize)
+    var url = API_BASE + "/api/calculations?page=" + currentPage + "&size=" + pageSize;
+    if (historyKeyword) {
+      url += "&keyword=" + encodeURIComponent(historyKeyword);
+    }
+    fetch(url)
         .then(function (res) {
           if (!res.ok) {
             return res.json().then(function (d) {
@@ -183,8 +194,12 @@
         .then(function (data) {
           if (data.success) {
             showResult(data.expression, data.result);
-            // 回到第一页查看最新记录
+            // 回到第一页查看最新记录；若正处于搜索状态则一并清空，确保新记录可见
             currentPage = 0;
+            if (historyKeyword) {
+              historyKeyword = "";
+              if (searchInput) { searchInput.value = ""; }
+            }
             loadHistory();
           } else {
             showError(data.errorMessage || "计算失败");
@@ -297,6 +312,42 @@
         insertIntoInput(key);
       }
       expressionInput.focus();
+    });
+  }
+
+  // ---------------- 扩展功能：历史记录搜索 ----------------
+  var searchInput = $("#historySearch");
+  var searchTimer = null;
+
+  function applySearch() {
+    historyKeyword = searchInput ? searchInput.value.trim() : "";
+    currentPage = 0;
+    loadHistory();
+  }
+
+  if (searchInput) {
+    // 输入防抖：停止输入 300ms 后才请求，避免每敲一个字都打后端
+    searchInput.addEventListener("input", function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applySearch, 300);
+    });
+    // 回车立即搜索
+    searchInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        clearTimeout(searchTimer);
+        applySearch();
+      }
+    });
+  }
+  var searchResetBtn = $("#historySearchReset");
+  if (searchResetBtn) {
+    searchResetBtn.addEventListener("click", function () {
+      clearTimeout(searchTimer);
+      if (searchInput) { searchInput.value = ""; }
+      historyKeyword = "";
+      currentPage = 0;
+      loadHistory();
     });
   }
 
