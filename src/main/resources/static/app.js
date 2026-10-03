@@ -47,9 +47,17 @@
   function hideError() {
     errorBox.hidden = true;
   }
+  // 数字格式化：消除二进制浮点误差带来的显示噪声。
+  // 例如 1.1 + 2.2 在 double 下会得到 3.3000000000000003，这里显示为 3.3。
+  // 只影响展示，不改变后端返回与数据库存储的原始值。
+  function fmtNumber(value) {
+    if (typeof value !== "number" || !isFinite(value)) { return String(value); }
+    return Number(value.toPrecision(12)).toString();
+  }
   function showResult(expr, value) {
-    resultValue.textContent = value;
-    resultExpr.textContent = expr + " = " + value;
+    var shown = fmtNumber(value);
+    resultValue.textContent = shown;
+    resultExpr.textContent = expr + " = " + shown;
     resultBox.hidden = false;
   }
   function fmtTime(iso) {
@@ -86,7 +94,7 @@
       expr.title = item.expression;
       var res = document.createElement("div");
       res.className = "history-result" + (item.success ? "" : " failed");
-      res.textContent = item.success ? ("= " + item.result) : ("✗ " + item.errorMessage);
+      res.textContent = item.success ? ("= " + fmtNumber(item.result)) : ("✗ " + item.errorMessage);
       main.appendChild(expr);
       main.appendChild(res);
       var time = document.createElement("span");
