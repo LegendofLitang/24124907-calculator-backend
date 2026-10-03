@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    # 测试使用 H2 内存库：每次测试独立、互不干扰、无需清理磁盘文件。
+    # 生产环境使用文件库（见 src/main/resources/application.yml）。
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+logging:
+  level:
+    root: warn
+    com.example.calculator: warn

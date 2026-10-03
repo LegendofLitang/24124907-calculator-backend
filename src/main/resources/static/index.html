@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>计算器系统</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🧮 计算器系统</h1>
+      <p class="subtitle">Java 17 · Spring Boot 3 · H2 持久化 · 安全表达式解析</p>
+    </header>
+
+    <main class="layout">
+      <!-- 计算区 -->
+      <section class="panel calc-panel" aria-label="计算器">
+        <form id="calcForm" novalidate>
+          <div class="field">
+            <label for="expression">数学表达式</label>
+            <div class="input-row">
+              <input id="expression" name="expression" type="text" inputmode="text"
+                     placeholder="如 (10 + 5) / 3" autocomplete="off" required />
+              <button type="button" id="clearInput" class="btn ghost" title="清空输入">清空</button>
+            </div>
+            <p class="hint">支持 + − × ÷ 写作 + - * /，以及 % ( ) 和小数、负数</p>
+          </div>
+          <!-- 虚拟按键网格【新增】 -->
+          <div class="calc-keypad" role="group" aria-label="虚拟按键">
+            <button type="button" class="key-btn fn" data-key="clear" aria-label="清空输入">C</button>
+            <button type="button" class="key-btn fn" data-key="back" aria-label="退格">⌫</button>
+            <button type="button" class="key-btn op" data-key="(" aria-label="左括号">(</button>
+            <button type="button" class="key-btn op" data-key=")" aria-label="右括号">)</button>
+
+            <button type="button" class="key-btn" data-key="7">7</button>
+            <button type="button" class="key-btn" data-key="8">8</button>
+            <button type="button" class="key-btn" data-key="9">9</button>
+            <button type="button" class="key-btn op" data-key="/" aria-label="除">÷</button>
+
+            <button type="button" class="key-btn" data-key="4">4</button>
+            <button type="button" class="key-btn" data-key="5">5</button>
+            <button type="button" class="key-btn" data-key="6">6</button>
+            <button type="button" class="key-btn op" data-key="*" aria-label="乘">×</button>
+
+            <button type="button" class="key-btn" data-key="1">1</button>
+            <button type="button" class="key-btn" data-key="2">2</button>
+            <button type="button" class="key-btn" data-key="3">3</button>
+            <button type="button" class="key-btn op" data-key="-" aria-label="减">−</button>
+
+            <button type="button" class="key-btn" data-key="0">0</button>
+            <button type="button" class="key-btn" data-key="." aria-label="小数点">.</button>
+            <button type="button" class="key-btn op" data-key="%" aria-label="取模">%</button>
+            <button type="button" class="key-btn op" data-key="+" aria-label="加">+</button>
+          </div>
+          <button type="submit" class="btn primary" id="calcBtn">
+            <span id="calcBtnText">计算</span>
+          </button>
+        </form>
+
+        <div id="resultBox" class="result-box" hidden>
+          <div class="result-label">结果</div>
+          <div class="result-value" id="resultValue"></div>
+          <div class="result-expr" id="resultExpr"></div>
+        </div>
+        <div id="errorBox" class="error-box" hidden></div>
+      </section>
+
+      <!-- 历史区 -->
+      <section class="panel history-panel" aria-label="历史记录">
+        <div class="history-head">
+          <h2>历史记录</h2>
+          <button id="prevPage" class="btn mini" type="button" disabled>‹ 上一页</button>
+          <button id="clearHistory" class="btn ghost small" type="button">清空全部</button>
+        </div>
+        <p class="history-meta" id="historyMeta"></p>
+        <ul id="historyList" class="history-list" aria-live="polite"></ul>
+        <div id="historyEmpty" class="empty" hidden>还没有计算记录</div>
+        <p id="historyLoad" class="load-hint" hidden>加载中…</p>
+        <button id="nextPage" class="btn mini" type="button" disabled>下一页 ›</button>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" hidden role="alert"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

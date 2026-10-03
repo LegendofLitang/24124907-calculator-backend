@@ -1,0 +1,259 @@
+/* 计算器系统 — 样式（无外部依赖，桌面/移动自适应） */
+:root {
+  --bg: #f4f6fb;
+  --panel: #ffffff;
+  --border: #dfe4ee;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --danger: #dc2626;
+  --ok: #16a34a;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 16px 56px;
+}
+
+header { text-align: center; margin-bottom: 18px; }
+header h1 { margin: 0; font-size: 26px; }
+.subtitle { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* 表单 */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.input-row { display: flex; gap: 8px; }
+.input-row input { flex: 1; }
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+.hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn.primary {
+  background: var(--primary);
+  color: #fff;
+  width: 100%;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.btn.primary:hover { background: var(--primary-dark); }
+.btn.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn.ghost:hover { color: var(--danger); border-color: var(--danger); }
+.btn.ghost.small { font-size: 13px; padding: 6px 10px; color: var(--danger); border-color: rgba(220, 38, 38, 0.4); }
+.btn.mini {
+  background: var(--panel);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.btn.mini:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 结果 / 错误 */
+.result-box, .error-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+}
+.result-box { background: #eef2ff; border: 1px solid #c7d2fe; }
+.result-label { font-size: 12px; color: var(--muted); }
+.result-value { font-size: 26px; font-weight: 700; color: var(--primary-dark); word-break: break-all; }
+.result-expr { font-size: 13px; color: var(--muted); margin-top: 4px; font-family: Consolas, monospace; }
+.error-box { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); font-size: 14px; }
+
+/* 历史 */
+.history-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.history-head h2 { margin: 0; font-size: 17px; margin-right: auto; }
+.history-meta { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+.history-list { list-style: none; margin: 0; padding: 0; }
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.history-item:hover { background: #f8fafc; }
+.history-item.failed { cursor: default; }
+.history-status {
+  flex: none;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ok);
+}
+.history-status.failed { background: var(--danger); }
+.history-main { flex: 1; min-width: 0; }
+.history-expr {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-result { font-size: 13px; font-weight: 600; color: var(--primary-dark); }
+.history-result.failed { color: var(--danger); font-weight: 400; }
+.history-time { font-size: 11px; color: var(--muted); flex: none; }
+.del-btn {
+  flex: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.del-btn:hover { color: var(--danger); background: rgba(220, 38, 38, 0.08); }
+.empty { color: var(--muted); font-size: 14px; text-align: center; padding: 22px 0; margin: 0; }
+.load-hint { color: var(--muted); font-size: 13px; text-align: center; padding: 12px 0; margin: 0; }
+.history-panel .btn.mini { margin-top: 10px; }
+
+/* 提示条 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  max-width: 84vw;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+}
+/* ======== 计算器按键面板新增样式 ======== */
+.calc-display-wrap {
+  display: flex;
+  gap:8px;
+}
+.calc-display-wrap input {
+  flex: 1;
+}
+.calc-keypad {
+  margin-top:14px;
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap:8px;
+}
+.key-btn {
+  min-height:46px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  font-size:16px;
+  cursor:pointer;
+  background:#fff;
+  transition: 0.12s;
+}
+.key-btn:hover{
+  background:#f3f4f6;
+}
+.key-btn.op{
+  background:#ede9fe;
+  color:var(--primary-dark);
+  font-weight:bold;
+}
+.key-btn.equals{
+  background: var(--primary);
+  color:white;
+  border:none;
+  grid-row: span 2;
+}
+.key-btn.equals:hover{
+  background:var(--primary-dark);
+}
+.key-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
+@media(max-width:480px){
+  .calc-keypad{
+    gap:6px;
+  }
+  .key-btn{
+    min-height:42px;
+    font-size:15px;
+  }
+}
+
+/* ======== 虚拟按键网格：功能键与交互补强【新增】 ======== */
+.key-btn {
+  font-family: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.key-btn:active {
+  transform: scale(0.97);
+}
+.key-btn.fn {
+  color: var(--muted);
+  font-size: 15px;
+}
+.key-btn.fn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: #fef2f2;
+}
+.key-btn.op:hover {
+  background: #ddd6fe;
+}
