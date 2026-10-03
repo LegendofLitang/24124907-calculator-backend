@@ -12,13 +12,14 @@
   "use strict";
 
   // ===== 后端地址配置 =====
-  // 优先使用 config.js 中配置的 window.API_BASE（部署时只改那一个文件即可）；
-  // 未配置时按当前运行场景自动判断。
+  // 解析优先级：
+  //   1. config.js 中显式配置的 window.API_BASE（公网独立部署时改那一处即可）
+  //   2. 页面由后端提供（同源，含 80 / 443 这类默认端口）→ 走相对路径 /api/...
+  //   3. 用 file:// 直接打开 html 文件 → 回退到本机后端 http://localhost:8080
+  // 提示：若用 Live Server 等其它端口访问本地后端，请在 config.js 中显式填写地址。
   var API_BASE = (typeof window.API_BASE === "string" && window.API_BASE !== "")
       ? window.API_BASE
-      : (location.protocol === "http:" || location.protocol === "https:")
-          ? (location.port === "8080" ? "" : "http://localhost:8080")
-          : "http://localhost:8080";
+      : (location.protocol === "file:" ? "http://localhost:8080" : "");
 
   var $ = function (sel) { return document.querySelector(sel); };
   var expressionInput = $("#expression");
