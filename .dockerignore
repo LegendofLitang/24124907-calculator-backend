@@ -1,0 +1,18 @@
+# 编译产物
+target/
+
+# 本地数据库文件（不应进入镜像）
+data/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 文档（镜像内不需要）
+*.md

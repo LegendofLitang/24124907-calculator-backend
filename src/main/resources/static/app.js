@@ -1,9 +1,25 @@
 /**
  * app.js — 计算器前端逻辑
  * 连接 Spring Boot 后端 REST API，无外部依赖。
+ *
+ * 【前后端分离说明】
+ * 本文件通过 API_BASE 定位后端：
+ *   - 由 Spring Boot(8080) 提供页面时，API_BASE 为空，走同源相对路径；
+ *   - 用 Live Server / http.server 等独立方式打开时，API_BASE 指向本机后端 8080。
+ * 后端 WebConfig 已放开 /api/** 的 CORS，跨端口访问可直接使用。
  */
 (function () {
   "use strict";
+
+  // ===== 后端地址配置 =====
+  // 优先使用 config.js 中配置的 window.API_BASE（部署时只改那一个文件即可）；
+  // 未配置时按当前运行场景自动判断。
+  var API_BASE = (typeof window.API_BASE === "string" && window.API_BASE !== "")
+      ? window.API_BASE
+      : (location.protocol === "http:" || location.protocol === "https:")
+          ? (location.port === "8080" ? "" : "http://localhost:8080")
+          : "http://localhost:8080";
+
   var $ = function (sel) { return document.querySelector(sel); };
   var expressionInput = $("#expression");
   var calcBtn = $("#calcBtn");
@@ -85,7 +101,7 @@
         ev.stopPropagation();
         removeRecord(item.id);
       });
-      // 点击历史条目：重新查看表达式（回填到输入框并立即计算）
+      // 点击历史条目：把表达式回填到输入框
       li.addEventListener("click", function () {
         expressionInput.value = item.expression;
         hideError();
@@ -105,7 +121,7 @@
   }
   function loadHistory() {
     loadEl.hidden = false;
-    fetch("/api/calculations?page=" + currentPage + "&size=" + pageSize)
+    fetch(API_BASE + "/api/calculations?page=" + currentPage + "&size=" + pageSize)
         .then(function (res) {
           if (!res.ok) {
             return res.json().then(function (d) {
@@ -121,7 +137,7 @@
         });
   }
   function removeRecord(id) {
-    fetch("/api/calculations/" + id, { method: "DELETE" })
+    fetch(API_BASE + "/api/calculations/" + id, { method: "DELETE" })
         .then(function (res) {
           if (!res.ok) {
             return res.json().then(function (d) {
@@ -140,7 +156,7 @@
     resultBox.hidden = true;
     calcBtn.disabled = true;
     $("#calcBtnText").textContent = "计算中…";
-    fetch("/api/calculations", {
+    fetch(API_BASE + "/api/calculations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ expression: expression })
@@ -192,7 +208,7 @@
   });
   $("#clearHistory").addEventListener("click", function () {
     if (!confirm("确定清空全部历史记录吗？")) return;
-    fetch("/api/calculations", { method: "DELETE" })
+    fetch(API_BASE + "/api/calculations", { method: "DELETE" })
         .then(function (res) {
           if (!res.ok) {
             return res.json().then(function (d) {
@@ -217,7 +233,7 @@
     if (e.key === "Enter") { e.preventDefault(); $("#calcForm").dispatchEvent(new Event("submit")); }
   });
 
-  // ===== 虚拟按键：点击输入 + 退格【新增】=====
+  // ===== 虚拟按键：点击输入 + 退格 =====
   // 在光标处插入字符；若浏览器不提供光标位置，则退化为追加到末尾。
   function insertIntoInput(text) {
     hideError();
