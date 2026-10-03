@@ -31,15 +31,20 @@ public class CalculationService {
     /**
      * 计算表达式并保存历史记录。
      *
-     * <p>表达式语法非法（空、非法字符、括号不匹配、连续运算符、数字格式错误）时抛出
-     * {@link ExpressionException}，不保存任何记录；
-     * 除零、溢出等"语义错误"同样抛出异常，但会保存一条失败记录（success=false），
+     * <p>表达式为空（null 或纯空白）时直接抛出 {@link ExpressionException}，不保存记录；
+     * 其余失败情形（非法字符、括号不匹配、连续运算符、数字格式错误、除零、溢出）
+     * 都会先保存一条失败记录（success=false），再抛出异常，
      * 便于用户在历史中看到出错的表达式与原因。
+     *
+     * <p><b>注意</b>：本方法必须声明 {@code noRollbackFor = ExpressionException.class}。
+     * 因为 {@link ExpressionException} 是运行时异常，若使用默认的 {@code @Transactional}，
+     * "保存失败记录后抛出异常"会触发整个事务回滚，刚刚写入的失败记录会被一并丢弃，
+     * 导致历史记录中永远看不到失败条目。
      *
      * @param expression 用户输入表达式
      * @return 计算记录响应
      */
-    @Transactional
+    @Transactional(noRollbackFor = ExpressionException.class)
     public CalculationResponse calculate(String expression) {
         if (expression == null) {
             throw new ExpressionException("表达式不能为空");

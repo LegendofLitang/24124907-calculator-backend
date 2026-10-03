@@ -120,6 +120,26 @@ class CalculationControllerTest {
     }
 
     @Test
+    @DisplayName("除零后失败记录应真正写入历史（回归测试：事务不得回滚）")
+    void divideByZeroSavesFailureRecordToHistory() throws Exception {
+        mockMvc.perform(post("/api/calculations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expression\": \"1 / 0\"}"))
+                .andExpect(status().isBadRequest());
+
+        // 本测试类没有标注 @Transactional，因此每个 HTTP 请求运行在独立事务中，
+        // 能真实反映生产环境行为。若 CalculationService.calculate() 使用默认的
+        // @Transactional，保存失败记录后抛出的异常会触发回滚，下面的断言将失败。
+        mockMvc.perform(get("/api/calculations").param("page", "0").param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].expression").value("1 / 0"))
+                .andExpect(jsonPath("$.content[0].success").value(false))
+                .andExpect(jsonPath("$.content[0].errorMessage", containsString("除数不能为零")));
+    }
+
+    @Test
     @DisplayName("非法字符返回 400")
     void illegalChars() throws Exception {
         mockMvc.perform(post("/api/calculations")
